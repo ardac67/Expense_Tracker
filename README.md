@@ -2,69 +2,68 @@
 
 ## Table of Contents
 - [Introduction](#introduction)
-- [Usage](#usage)
+- [Installation](#installation)
 - [API Endpoints](#api-endpoints)
+- [License](#license)
 
 ## Introduction
 
-This project is a little project for the getting used to kind of backend stuff.No proffessional concers existed here.Just tried to put everything down i learned. 
+Expense Tracker is a simple backend project designed for learning purposes. It allows users to track their expenses within a specified timeline. Please note that this project is not intended for professional use, and certain APIs have been omitted for security reasons.
 
 ## Installation
 
-To get started with this project, follow the steps below:
+To get started with Expense Tracker, follow these steps:
 
-1. Clone this repository to your local machine.
+1. Clone this repository to your local machine:
 
-https://github.com/ardac67/Expense_Tracker.git
+2. Navigate to the project directory:
 
-** This project benefited from mongoDb container from docker.If you wanna use it ,handle it properly or just download docker.**
-** Also this project utilize from some other api but i did not add that part for some security purposes.**
+3. Build the project using gradle:
 
-2. Run the project with commandline or any idea you prefer.
+4. Run the application:
 
-** gradlew build **
-** java -jar build/libs/{"your.jar"}.jar
+**Note**: This project utilizes a MongoDB container from Docker. Ensure that you handle it properly or install Docker if you want to use it.
 
-## API Endpoints
-Below are the API endpoints available in this project:
+## Usage
 
-1.GET /track/getPosts
-- Description: Getting all expense posts according to given timeline,need to authenticate with basic authentication
-- Request Parameters: 
-  -Key:startDate
-  -Value:2023-01-01 
-  -Key:endDate
-  -Value:2023-12-12
-- Response: Consists of the expenseTypes and it's values and the userId of the expenses
+Expense Tracker provides API endpoints for various functionalities. Below are the available endpoints:
 
-2.GET /track/getPosts
-- Description: Getting all expenses and putting them together in one report  according to given timeline,need to authenticate with basic authentication
-- Request Parameters: 
-  -Key:startDate (Required)
-  -Value:2023-01-01
-  -Key:endDate (Required)
-  -Value:2023-01-01
-  -Key:desiredCurrencies (Required)// this can be populated for example->if you fetch data for one or more currencies this parameter can be populated for them.
-  -Value:"TRL"
-  -Key:currencyDate (Required) //gets the value of the currencies for that date.
-  -Value:2023-01-01
-- Response: Calculates the all expenses for the given timeline and gives report about the total and unit based values for all currencies that endpoint requests.Possible codes 200 and 400(bad request some parameter can be missing or not properly formatted)
+1. **GET /track/getPosts**
+- Description: Fetches all expense posts according to a given timeline. Requires basic authentication.
+- Request Parameters:
+  - Key: startDate (Required) - Value: 2023-01-01
+  - Key: endDate (Required) - Value: 2023-12-12
+- Response: Provides a list of expenseTypes with their values and the userId of the expenses.
 
+2. **GET /track/getPosts**
+- Description: Fetches all expenses and generates a report for the given timeline. Requires basic authentication.
+- Request Parameters:
+  - Key: startDate (Required) - Value: 2023-01-01
+  - Key: endDate (Required) - Value: 2023-01-01
+  - Key: desiredCurrencies (Required) - Populated with the currencies to fetch data for.
+  - Value: "TRL"
+  - Key: currencyDate (Required) - Gets the value of the currencies for that date.
+  - Value: 2023-01-01
+- Response: Calculates the total expenses for the given timeline and provides a report with total and unit-based values for all requested currencies. Possible response codes are 200 and 400 (bad request, some parameters may be missing or not properly formatted).
 
-3.POST /createUser
-- Description: Creating user for given data and no need for authentication.
-- Request Body:{
-                "name":"ardaTest1", //name of the user
-                "password":"123",  //pass of the user
-                "currency":"USD"  // currency which is used for as base currency for the calculations
-               }
--Response: code:201 -> user created or code:401->bad request
+3. **POST /createUser**
+- Description: Creates a user with the provided data. No authentication is required.
+- Request Body:
+  ```json
+  {
+    "name": "ardaTest1", // Name of the user
+    "password": "123",   // Password of the user
+    "currency": "USD"    // Currency used as the base currency for calculations
+  }
+  ```
+- Response: Returns code 201 if the user is created successfully or code 401 if there is a bad request.
 
-4.POST /track/createExpense
-- Description: Post the body of the request as a expense , requires authentication 
-- Request Body: Sample body -> you can add more field if you wish
+4. **POST /track/createExpense**
+- Description: Posts the body of the request as an expense. Requires authentication.
+- Request Body: A sample body is provided, and additional fields can be added if desired.
+  ```json
   [
-   {
+    {
       "expenseType": {
         "health": 1200.50,
         "Transportation": 1000.25,
@@ -76,4 +75,7 @@ Below are the API endpoints available in this project:
       "submittedDate": "2023-09-25"
     }
   ]
-- Response: 201(succesful) or 400 (bad request)
+  ```
+- Response: Returns code 201 if the request is successful (expense is created) or code 400 if the request is bad (invalid schema).
+
+
