@@ -22,6 +22,7 @@ To get started with Expense Tracker, follow these steps:
 
 4. Run the application:
 
+
 **Note**: This project utilizes a MongoDB container from Docker. Ensure that you handle it properly or install Docker if you want to use it.
 
 ## Usage
@@ -40,15 +41,13 @@ Expense Tracker provides API endpoints for various functionalities. Below are th
 - Request Parameters:
   - Key: startDate (Required) - Value: 2023-01-01
   - Key: endDate (Required) - Value: 2023-01-01
-  - Key: desiredCurrencies (Required) - Populated with the currencies to fetch data for.
-  - Value: "TRL"
-  - Key: currencyDate (Required) - Gets the value of the currencies for that date.
-  - Value: 2023-01-01
+  - Key: desiredCurrencies (Required) - Populated with the currencies to fetch data for. Value: "TRL"
+  - Key: currencyDate (Required) - Gets the value of the currencies for that date. Value: 2023-01-01
 - Response: Calculates the total expenses for the given timeline and provides a report with total and unit-based values for all requested currencies. Possible response codes are 200 and 400 (bad request, some parameters may be missing or not properly formatted).
 
 3. **POST /createUser**
 - Description: Creates a user with the provided data. No authentication is required.
-- Request Body:
+- Request Body: 
   ```json
   {
     "name": "ardaTest1", // Name of the user
@@ -77,5 +76,4 @@ Expense Tracker provides API endpoints for various functionalities. Below are th
   ]
   ```
 - Response: Returns code 201 if the request is successful (expense is created) or code 400 if the request is bad (invalid schema).
-
 
