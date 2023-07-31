@@ -43,6 +43,48 @@ Expense Tracker provides API endpoints for various functionalities. Below are th
   - Key: desiredCurrencies (Required) - Populated with the currencies to fetch data for. Value: "TRL"
   - Key: currencyDate (Required) - Gets the value of the currencies for that date. Value: 2023-01-01
 - Response: Calculates the total expenses for the given timeline and provides a report with total and unit-based values for all requested currencies. Possible response codes are 200 and 400 (bad request, some parameters may be missing or not properly formatted).
+   ```json
+{
+    "UserId": "64c77ce88b343523d050130f",
+    "BaseCurrency": "USD",
+    "StartDate": "2023-01-01",
+    "EndDate": "2023-12-12",
+    "CurrencyDate": "2022-07-20",
+    "Currency": {
+        "GBP/USD": 1.1976,
+        "EUR/USD": 1.01806
+    },
+    "USD": {
+        "health": 20759.68,
+        "Transportation": 17158.63,
+        "Education": 4931.2,
+        "food": 7850.0,
+        "Entertainment": 2650.0,
+        "Utilities": 2030.0,
+        "Total": 55379.51
+    },
+    "OtherCurrencies": {
+        "GBP": {
+            "health": 17334.4,
+            "Transportation": 14327.51,
+            "Education": 4117.57,
+            "food": 6554.78,
+            "Entertainment": 2212.76,
+            "Utilities": 1695.06,
+            "Total": 46242.08
+        },
+        "EUR": {
+            "health": 20391.41,
+            "Transportation": 16854.24,
+            "Education": 4843.72,
+            "food": 7710.74,
+            "Entertainment": 2602.99,
+            "Utilities": 1993.99,
+            "Total": 54397.1
+        }
+    }
+}
+  ```
 
 3. **POST /createUser**
 - Description: Creates a user with the provided data. No authentication is required.
