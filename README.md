@@ -4,7 +4,6 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [API Endpoints](#api-endpoints)
-- [License](#license)
 
 ## Introduction
 
