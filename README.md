@@ -25,7 +25,7 @@ To get started with Expense Tracker, follow these steps:
 
 **Note**: This project utilizes a MongoDB container from Docker. Ensure that you handle it properly or install Docker if you want to use it.
 
-## Usage
+## API Endpoints
 
 Expense Tracker provides API endpoints for various functionalities. Below are the available endpoints:
 
