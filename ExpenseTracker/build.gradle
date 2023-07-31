@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation group: 'io.vertx', name: 'vertx-web', version: '4.4.4'
+    implementation group: 'io.vertx', name: 'vertx-web-client', version: '4.4.4'
+    implementation group: 'org.mongodb',name:'mongodb-driver-async',version:'3.11.0'
+    implementation group: 'com.fasterxml.jackson.core',name:'jackson-databind',version:'2.12.5'
+}
+
+test {
+    useJUnitPlatform()
+}
