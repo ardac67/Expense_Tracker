@@ -10,6 +10,7 @@ import com.mongodb.client.result.UpdateResult;
 import io.vertx.core.json.JsonObject;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import java.util.ArrayList;
 import java.util.List;
