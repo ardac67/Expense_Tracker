@@ -12,6 +12,8 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import io.github.cdimascio.dotenv.Dotenv;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -162,13 +164,13 @@ public class Handlers {
                 else{
                     boolean check=checkParamValidation(currencyParameters);
                     if(check){
-                        HttpRequest<Buffer> request=client.get("cartcurt"
+                        HttpRequest<Buffer> request=client.get(dotenv.get("url")
                                         + newString +
                                         "/to/" +
                                         newString)
-                                .putHeader("resource","cartcurt")
-                                .putHeader("company","cartcurt")
-                                .basicAuthentication("cartcurt","cartcurt");
+                                .putHeader("resource",dotenv.get("res"))
+                                .putHeader("company",dotenv.get("comp"))
+                                .basicAuthentication(dotenv.get("user"),dotenv.get("pass"));
                         for(int i=0;i<currencyParameters.size();i++){
                             request.addQueryParam("c",currencyParameters.get(i)+"/"+baseCurrency);
                         }
@@ -215,7 +217,7 @@ public class Handlers {
     }
 
     public void getLegacyCode(){
-        client.get("cartcurt.com")
+        client.get(dotenv.get("url2"))
         .send()
         .onSuccess(response->{
                 jsonLegacyArray=response.bodyAsJsonArray();

@@ -12,6 +12,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import io.github.cdimascio.dotenv.Dotenv;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class MongoDbConnection {
     private MongoCollection<Document> collection;
 
     public MongoDbConnection(){
-        client= MongoClients.create("mongodb://cartcurt");
+        client= MongoClients.create(dotenv.get("db"));
         database=client.getDatabase("ExpenseTracker");
     }
     public void InsertUser(Document doc, CheckUserCallBack callback){
