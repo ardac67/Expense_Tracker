@@ -26,6 +26,7 @@ public class Handlers {
     private String baseCurrency;
     private JsonArray jsonLegacyArray;
     private JsonObject currencyData;
+    private Set<String> validLegacyCodes ;
     public Handlers(MongoDbConnection _cnn,WebClient _client,Vertx _vertx)
     {
         cnn=_cnn;
@@ -203,33 +204,30 @@ public class Handlers {
     }
 
     private boolean checkParamValidation(List<String> currencyParameters) {
-        boolean result=false;
-        for(int i=0;i<currencyParameters.size();i++){
-            for(int j=0;j<jsonLegacyArray.size();j++){
-                if(jsonLegacyArray.getJsonObject(j).getString("legacyCode").equals(currencyParameters.get(i)+"/"+baseCurrency)){
-                    result=true;
-                    break;
-                }
-                else {
-                    result=false;
-                }
-            }
-            if(!result){
-                break;
+        for (String currencyParam : currencyParameters) {
+            String targetCode = currencyParam + "/" + baseCurrency;
+            if (!validLegacyCodes.contains(targetCode)) {
+                return false;
             }
         }
-        return result;
+
+        return true;
     }
 
     public void getLegacyCode(){
         client.get("cartcurt.com")
-                .send()
-                .onSuccess(response->
-                        jsonLegacyArray=response.bodyAsJsonArray()
-                )
-                .onFailure( response->
-                    System.out.println("Error happened when making request")
-                );
+        .send()
+        .onSuccess(response->{
+                jsonLegacyArray=response.bodyAsJsonArray();
+                for (int j = 0; j < jsonLegacyArray.size(); j++) {
+                    String legacyCode = jsonLegacyArray.getJsonObject(j).getString("legacyCode");
+                    validLegacyCodes.add(legacyCode);
+                }
+            }
+        )
+        .onFailure( response->
+            System.out.println("Error happened when making request")
+        );
     }
 
 
