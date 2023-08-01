@@ -12,8 +12,9 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import io.github.cdimascio.dotenv.Dotenv;
 
-
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MongoDbConnection {
@@ -40,24 +41,28 @@ public class MongoDbConnection {
             }
         });
     }
-    public void postExpense(List<Document> doc, PostSuccesfull callback){
-        collection=database.getCollection("expenses");
-        collection.insertMany(doc, new SingleResultCallback<Void>() {
+    public void postExpense(List<Document> doc,String userId, PostSuccesfull callback){
+        ObjectId objectId= new ObjectId(userId);
+        collection=database.getCollection("users");
+        Document filter = new Document("_id", objectId);
+        Document update = new Document("$push", new Document("Expenses", new Document("$each", doc)));
+        collection.updateOne(filter, update, new SingleResultCallback<UpdateResult>() {
             @Override
-            public void onResult(Void result, Throwable t) {
+            public void onResult(UpdateResult result, Throwable t) {
                 if(t!=null){
                     callback.onResult(false,t);
                 }
                 else{
-                    boolean postSucces=true;
-                    callback.onResult(postSucces,null);
+                    boolean postCreated=true;
+                    callback.onResult(postCreated,null);
                 }
             }
         });
+
     }
-    public void getReport(Document filter, ResultCallBack resultCallBack){
-        List<Document> resultList = new ArrayList<>();
-        collection=database.getCollection("expenses");
+    public void getReport(Document filter,LocalDate dateStartFormatted,LocalDate dateEndFormatted,ObjectId id, ResultCallBack resultCallBack){
+          List<Document> resultList = new ArrayList<>();
+        collection=database.getCollection("users");
         SingleResultCallback<Void> callbackWhenFinished = new SingleResultCallback<Void>() {
             @Override
             public void onResult(final Void result, final Throwable t) {
@@ -70,12 +75,17 @@ public class MongoDbConnection {
                 resultList.add(document);
             }
         };
-        collection.find(filter).forEach(printBlock, callbackWhenFinished);
+        collection.aggregate(Arrays.asList(
+                Aggregates.match(Filters.eq("_id",id)),
+                Aggregates.unwind("$Expenses"),
+                Aggregates.match(Filters.gt("Expenses.submittedDate",dateStartFormatted)),
+                Aggregates.match(Filters.lt("Expenses.submittedDate",dateEndFormatted))
+        )).forEach(printBlock, callbackWhenFinished);
     }
 
-    public void getExpenses(Document filter,ResultCallBack resultCallBack){
+    public void getExpenses(ObjectId id ,LocalDate start , LocalDate end, ResultCallBack resultCallBack){
         List<Document> resultExpenses = new ArrayList<>();
-        collection=database.getCollection("expenses");
+        collection=database.getCollection("users");
         SingleResultCallback<Void> callbackWhenFinished = new SingleResultCallback<Void>() {
             @Override
             public void onResult(final Void result, final Throwable t) {
@@ -84,11 +94,15 @@ public class MongoDbConnection {
         };
         Block<Document> printBlock = new Block<Document>() {
             @Override
-            public void apply( Document document) {
-                resultExpenses.add(document);
+            public void apply( Document document) {resultExpenses.add(document);
             }
         };
-        collection.find(filter).forEach(printBlock, callbackWhenFinished);
+        collection.aggregate(Arrays.asList(
+                Aggregates.match(Filters.eq("_id",id)),
+                Aggregates.unwind("$Expenses"),
+                Aggregates.match(Filters.gt("Expenses.submittedDate",start)),
+                Aggregates.match(Filters.lt("Expenses.submittedDate",end))
+        )).forEach(printBlock, callbackWhenFinished);
 
     }
 
