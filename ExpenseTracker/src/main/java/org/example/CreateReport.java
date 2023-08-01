@@ -19,7 +19,7 @@ public class CreateReport {
     }
     public JsonObject parseDoc(JsonArray jsonDoc,JsonObject currencyData,String sDate,String eDate,String cDate){
         HashMap<String ,Double> pairs= new HashMap<>();
-        String userId=jsonDoc.getJsonObject(0).getString("UserId");
+        String userId=jsonDoc.getJsonObject(0).getString("_id").toString();
 
         //getting currencies
         JsonObject currencies= new JsonObject();
@@ -35,7 +35,9 @@ public class CreateReport {
         }
         //getting fieldnames
         List<String> fieldNames= new ArrayList<>();
-        Set<String> fieldSet = jsonDoc.getJsonObject(0).getJsonObject("expenseType").fieldNames();
+        Set<String> fieldSet = jsonDoc.getJsonObject(0).getJsonObject("Expenses").fieldNames();
+        fieldSet.remove("UserId");
+        fieldSet.remove("submittedDate");
         for (String fieldName : fieldSet) {
             fieldNames.add(fieldName);
         }
@@ -45,8 +47,8 @@ public class CreateReport {
         double totalData=0;
         for(int i=0;i<fieldNames.size();i++){
             for(int j=0;j<jsonDoc.size();j++){
-                myData=myData+jsonDoc.getJsonObject(j).getJsonObject("expenseType").getDouble(fieldNames.get(i));
-                totalData=totalData+jsonDoc.getJsonObject(j).getJsonObject("expenseType").getDouble(fieldNames.get(i));
+                myData=myData+jsonDoc.getJsonObject(j).getJsonObject("Expenses").getDouble(fieldNames.get(i));
+                totalData=totalData+jsonDoc.getJsonObject(j).getJsonObject("Expenses").getDouble(fieldNames.get(i));
             }
             pairs.put(fieldNames.get(i),myData);
             myData=0;
