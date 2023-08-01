@@ -93,6 +93,7 @@ public class Handlers {
     public void createExpense(RoutingContext routingContext) {
         DateTimeBuilder builder = new DateTimeBuilder();
         JsonArray cntxType=routingContext.body().asJsonArray();
+        String userId=routingContext.user().principal().getString("id");
         List<Document> docList= new ArrayList<>();
             for(int i=0;i<cntxType.size();i++){
                 Document document= new Document();
@@ -102,19 +103,16 @@ public class Handlers {
                 for (String fieldName : fieldSet) {
                     fieldNames.add(fieldName);
                 }
-                Document fieldDoc=new Document();
                 for(int j=0;j<fieldNames.size();j++){
-                    fieldDoc
+                    document
                             .append(fieldNames.get(j),obj.getJsonObject("expenseType").getDouble(fieldNames.get(j)));
                 }
-                document.append("expenseType",fieldDoc);
-                document.append("UserId",routingContext.user().principal().getString("id"));
                 LocalDate dateStart=builder.returnFormattedDate(obj.getString("submittedDate"));
                 document.append("submittedDate",dateStart);
                 docList.add(document);
             }
 
-        cnn.postExpense(docList, new PostSuccesfull() {
+        cnn.postExpense(docList,userId, new PostSuccesfull() {
             @Override
             public void onResult(boolean postSucess, Throwable error) {
                 JsonObject obj= new JsonObject();
@@ -134,6 +132,7 @@ public class Handlers {
             }
         });
 
+
     }
 
 
@@ -149,6 +148,7 @@ public class Handlers {
         LocalDate dateEndFormatted = builder.returnFormattedDate(endDate);
         String newString= builder.returnFormattedWithTime(rawCurrencyDate);
         newString=newString+"000000";
+        ObjectId idUser= new ObjectId(routingContext.user().principal().getString("id"));
         CreateReport rep= new CreateReport(client,currencyParameters,jsonLegacyArray,baseCurrency);
         if(startDate==null || endDate==null){
             routingContext.fail(400);
@@ -164,12 +164,12 @@ public class Handlers {
                 else{
                     boolean check=checkParamValidation(currencyParameters);
                     if(check){
-                        HttpRequest<Buffer> request=client.get(dotenv.get("url")
+                        HttpRequest<Buffer> request=client.get(dotenv.get("url"),dotenv.get("url2")
                                         + newString +
                                         "/to/" +
                                         newString)
-                                .putHeader("resource",dotenv.get("res"))
-                                .putHeader("company",dotenv.get("comp"))
+                                .putHeader(dotenv.get("h1"),dotenv.get("res"))
+                                .putHeader(dotenv.get("h2"),dotenv.get("res2"))
                                 .basicAuthentication(dotenv.get("user"),dotenv.get("pass"));
                         for(int i=0;i<currencyParameters.size();i++){
                             request.addQueryParam("c",currencyParameters.get(i)+"/"+baseCurrency);
@@ -179,7 +179,7 @@ public class Handlers {
                                     currencyData = cxt.bodyAsJsonObject();
                                     Document filter= new Document("UserId", routingContext.user().principal().getString("id"))
                                             .append("submittedDate", new Document("$gt", dateStartFormatted).append("$lt",dateEndFormatted));
-                                    cnn.getReport(filter, documents -> {
+                                    cnn.getReport(filter,dateStartFormatted,dateEndFormatted,idUser, documents -> {
                                         JsonArray jsonDocuments = new JsonArray();
                                         for (Document document : documents) {
                                             jsonDocuments.add(document);
@@ -201,8 +201,6 @@ public class Handlers {
                 }
             }
         }
-
-
     }
 
     private boolean checkParamValidation(List<String> currencyParameters) {
@@ -212,12 +210,11 @@ public class Handlers {
                 return false;
             }
         }
-
         return true;
     }
 
     public void getLegacyCode(){
-        client.get(dotenv.get("url2"))
+        client.get(dotenv.get("url3"))
         .send()
         .onSuccess(response->{
                 jsonLegacyArray=response.bodyAsJsonArray();
@@ -234,6 +231,7 @@ public class Handlers {
 
 
     public void getPosts(RoutingContext routingContext) {
+    
         MultiMap queryParams = routingContext.queryParams();
         String startDate = queryParams.get("startDate");
         String endDate = queryParams.get("endDate");
@@ -241,14 +239,14 @@ public class Handlers {
         if(startDate !=null && endDate!=null){
         LocalDate dateStartFormatted = builder.returnFormattedDate(startDate);
         LocalDate dateEndFormatted = builder.returnFormattedDate(endDate);
-        Document filter= new Document("UserId", routingContext.user().principal().getString("id"))
-                .append("submittedDate", new Document("$gt", dateStartFormatted).append("$lt",dateEndFormatted));
+        ObjectId idUser= new ObjectId(routingContext.user().principal().getString("id"));
 
-            cnn.getExpenses(filter,documents -> {
+            cnn.getExpenses(idUser,dateStartFormatted,dateEndFormatted,documents -> {
                 JsonArray jsonDocuments = new JsonArray();
                 for (Document document : documents) {
                     String id=document.getObjectId("_id").toString();
                     document.remove("_id");
+                    document.remove("password");
                     document.append("id",id);
                     jsonDocuments.add(document);
                 }
