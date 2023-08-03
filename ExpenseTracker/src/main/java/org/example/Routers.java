@@ -14,14 +14,14 @@ public class Routers {
     private MongoDbConnection cnn;
     private Handlers handlers;
     private WebClient client;
-    public  Routers(Vertx _vertx, MongoDbConnection _cnn, WebClient _client){
-        router = Router.router(_vertx);
-        client=_client;
+    public  Routers(Vertx vertx, MongoDbConnection cnn, WebClient client){
+        this.router = Router.router(_vertx);
+        this.client=client;
         router.route().handler(BodyHandler.create());
-        cnn=_cnn;
+        this.cnn=cnn;
         authentic= new MyAuthenticator(cnn);
         basicAuthHandler= BasicAuthHandler.create(authentic);
-        handlers= new Handlers(cnn,client,_vertx);
+        handlers= new Handlers(cnn,client,vertx);
     }
     public Router createRouters(){
         router.route().failureHandler(handlers::handleFailures);
@@ -31,8 +31,6 @@ public class Routers {
         router.post("/createUser").handler(handlers::createUser);
         router.get("/track/getExpense").blockingHandler(handlers::getReport);
         router.get("/track/getPosts").handler(handlers::getPosts);
-        //router.delete("/track/deletePosts").handler(handlers::deletePost);
-        //router.put("/track/editPost").handler(handlers::editPost);
         return router;
     }
 }

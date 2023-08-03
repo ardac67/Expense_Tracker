@@ -29,11 +29,11 @@ public class Handlers {
     private JsonArray jsonLegacyArray;
     private JsonObject currencyData;
     private Set<String> validLegacyCodes ;
-    public Handlers(MongoDbConnection _cnn,WebClient _client,Vertx _vertx)
+    public Handlers(MongoDbConnection cnn,WebClient client,Vertx vertx)
     {
-        cnn=_cnn;
-        client=_client;
-        vertx=_vertx;
+        this.cnn=cnn;
+        this.client=client;
+        this.vertx=vertx;
         getLegacyCode();
     }
     public void createUser(RoutingContext routingContext) {

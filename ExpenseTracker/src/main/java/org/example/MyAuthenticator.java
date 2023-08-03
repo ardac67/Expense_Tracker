@@ -10,13 +10,14 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
 import org.bson.Document;
+import io.github.cdimascio.dotenv.Dotenv;
 
 
 public class MyAuthenticator implements AuthProvider {
-    private MongoDbConnection conn;
+    private MongoDbConnection cnn;
 
     public MyAuthenticator(MongoDbConnection cnn){
-        conn=cnn;
+        this.cnn=cnn;
     }
 
     @Override
@@ -27,7 +28,7 @@ public class MyAuthenticator implements AuthProvider {
 
         Document obj = new Document("name", username)
                 .append("password",password);
-        MongoClient client= MongoClients.create("mongodb://cartcurt");
+        MongoClient client= MongoClients.create(dotenv.get("db"));
         MongoDatabase  database=client.getDatabase("ExpenseTracker");
         MongoCollection<Document> collection=database.getCollection("users");
         JsonObject userInfo= new JsonObject();
@@ -39,14 +40,10 @@ public class MyAuthenticator implements AuthProvider {
                 String currency = userDocument.getString("currency");
                 String id = userDocument.getObjectId("_id").toString(); //
                 String storedP=userDocument.getString("password");
-                if (storedP.equals(password)) {
                     userInfo.put("id",id)
                             .put("currency",currency);
                     User user = User.create(userInfo);
                     resultHandler.handle(io.vertx.core.Future.succeededFuture(user));
-                } else {
-                    resultHandler.handle(io.vertx.core.Future.failedFuture("Invalid credentials"));
-                }
             }
         });
     }

@@ -11,11 +11,11 @@ public class CreateReport {
     private JsonArray jsonLegacy;
     private String baseCurr;
 
-    public CreateReport(WebClient _client,List<String> currParams,JsonArray _jsonLegacy,String _baseCurr){
-        client=_client;
-        currencyParameters=currParams;
-        jsonLegacy=_jsonLegacy;
-        baseCurr=_baseCurr;
+    public CreateReport(WebClient client,List<String> currParams,JsonArray jsonLegacy,String baseCurr){
+        this.client=client;
+        this.currencyParameters=currParams;
+        this.jsonLegacy=jsonLegacy;
+        this.baseCurr=baseCurr;
     }
     public JsonObject parseDoc(JsonArray jsonDoc,JsonObject currencyData,String sDate,String eDate,String cDate){
         HashMap<String ,Double> pairs= new HashMap<>();
