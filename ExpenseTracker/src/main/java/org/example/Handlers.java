@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 public class Handlers {
     private MongoDbConnection cnn;
@@ -37,23 +38,17 @@ public class Handlers {
         getLegacyCode();
     }
     public void createUser(RoutingContext routingContext) {
-        JsonObject obj= routingContext.getBodyAsJson();
+       JsonObject obj= routingContext.getBodyAsJson();
         Document document = new Document("name", obj.getString("name"))
                 .append("password", obj.getString("password"))
                 .append("currency", obj.getString("currency"));
-        cnn.InsertUser(document, new CheckUserCallBack() {
-            @Override
-            public void onResult(boolean userCreated, Throwable error) {
-                if(error!=null){
-                    routingContext.response().end(error.getMessage());
-                }
-                else{
-                    if (userCreated) {
-                        routingContext.response().setStatusCode(201).end(new JsonObject().put("message","user created").encodePrettily());
-                    } else {
-                        routingContext.response().end(new JsonObject().put("message","user could not created").encodePrettily());
-                    }
-                }
+        Future<Void> future=cnn.InsertUser(document);
+        future.onComplete(ar->{
+            if(ar.failed()){
+                routingContext.response().end("error happened");
+            }
+            else{
+                routingContext.response().setStatusCode(201).end(new JsonObject().put("response","succesful").encodePrettily());
             }
         });
     }
@@ -112,25 +107,20 @@ public class Handlers {
                 docList.add(document);
             }
 
-        cnn.postExpense(docList,userId, new PostSuccesfull() {
-            @Override
-            public void onResult(boolean postSucess, Throwable error) {
-                JsonObject obj= new JsonObject();
-                obj.put("successful",
-                        new JsonObject().put("code",200)
-                                .put("message","Created"));
-                if(error!=null){
-                    routingContext.response().setStatusCode(500).end(error.getMessage());
-                }
-                else{
-                    if (postSucess) {
-                        routingContext.response().setStatusCode(200).end(obj.encodePrettily());
-                    } else {
-                        routingContext.response().setStatusCode(500).end("post could not created");
-                    }
-                }
-            }
-        });
+            JsonObject obj= new JsonObject();
+            obj.put("successful",
+                    new JsonObject().put("code",200)
+                            .put("message","Created"));
+    
+            Future<Void> future=cnn.postExpense(docList,userId);
+            future.onComplete(ar->{
+               if(ar.failed()){
+                   routingContext.response().setStatusCode(500).end(new JsonObject().put("response","error happened").encodePrettily());
+               }
+               else{
+                   routingContext.response().setStatusCode(500).end(obj.encodePrettily());
+               }
+            });
 
 
     }
@@ -175,24 +165,30 @@ public class Handlers {
                             request.addQueryParam("c",currencyParameters.get(i)+"/"+baseCurrency);
                         }
                         request.send()
-                                .onSuccess(cxt-> {
-                                    currencyData = cxt.bodyAsJsonObject();
-                                    Document filter= new Document("UserId", routingContext.user().principal().getString("id"))
-                                            .append("submittedDate", new Document("$gt", dateStartFormatted).append("$lt",dateEndFormatted));
-                                    cnn.getReport(filter,dateStartFormatted,dateEndFormatted,idUser, documents -> {
-                                        JsonArray jsonDocuments = new JsonArray();
-                                        for (Document document : documents) {
-                                            jsonDocuments.add(document);
-                                        }
-                                        JsonObject obj = rep.parseDoc(jsonDocuments,currencyData,startDate,endDate,rawCurrencyDate);
-                                        routingContext.response().setStatusCode(200)
-                                                .putHeader("content-type", "application/json")
-                                                .end(obj.encodePrettily());
-                                    });
-                                })
-                                .onFailure(cxt->
-                                        routingContext.fail(500)
-                                );
+                        .onSuccess(cxt-> {
+                            currencyData = cxt.bodyAsJsonObject();
+                            Document filter= new Document("UserId", routingContext.user().principal().getString("id"))
+                                    .append("submittedDate", new Document("$gt", dateStartFormatted).append("$lt",dateEndFormatted));
+                            Future<List<Document>> future=cnn.getReport(filter,dateStartFormatted,dateEndFormatted,idUser);
+                            future.onComplete(ar->{
+                               if(ar.failed()){
+                                   routingContext.response().setStatusCode(500).end("Error");
+                               }
+                               else{
+                                   JsonArray jsonDocuments = new JsonArray();
+                                   for (Document document : future.result()) {
+                                       jsonDocuments.add(document);
+                                   }
+                                   JsonObject obj = rep.parseDoc(jsonDocuments,currencyData,startDate,endDate,rawCurrencyDate);
+                                   routingContext.response().setStatusCode(200)
+                                           .putHeader("content-type", "application/json")
+                                           .end(obj.encodePrettily());
+                               }
+                            });
+                        })
+                        .onFailure(cxt->
+                                routingContext.fail(500)
+                        );
 
                     }
                     else{
@@ -241,18 +237,25 @@ public class Handlers {
         LocalDate dateEndFormatted = builder.returnFormattedDate(endDate);
         ObjectId idUser= new ObjectId(routingContext.user().principal().getString("id"));
 
-            cnn.getExpenses(idUser,dateStartFormatted,dateEndFormatted,documents -> {
-                JsonArray jsonDocuments = new JsonArray();
-                for (Document document : documents) {
-                    String id=document.getObjectId("_id").toString();
-                    document.remove("_id");
-                    document.remove("password");
-                    document.append("id",id);
-                    jsonDocuments.add(document);
+            Document filter= new Document();
+            Future<List<Document>> future=cnn.getReport(filter,dateStartFormatted,dateEndFormatted,idUser);
+            future.onComplete(ar->{
+                if(ar.failed()){
+                    routingContext.response().setStatusCode(500).end("Error");
                 }
-                routingContext.response().setStatusCode(200)
-                        .putHeader("content-type", "application/json")
-                        .end(jsonDocuments.encodePrettily());
+                else{
+                    JsonArray jsonDocuments = new JsonArray();
+                    for (Document document : future.result()) {
+                        String id=document.getObjectId("_id").toString();
+                        document.remove("_id");
+                        document.remove("password");
+                        document.append("id",id);
+                        jsonDocuments.add(document);
+                    }
+                    routingContext.response().setStatusCode(200)
+                            .putHeader("content-type", "application/json")
+                            .end(jsonDocuments.encodePrettily());
+                }
             });
         }
         else{
