@@ -28,47 +28,68 @@ public class MongoDbConnection {
         database=client.getDatabase("ExpenseTracker");
     }
     public Future<Void> InsertUser(Document doc){
-        Promise<Void>promise= Promise.promise();
-        collection=database.getCollection("users");
-        collection.insertOne(doc, (result, t) -> {
-            if(t==null){
-                promise.complete();
-            }
-            else{
-                promise.fail(t.getMessage());
-            }
-        });
-        return promise.future();
+        Promise<Void> promise = Promise.promise();
+        try {
+            collection = database.getCollection("users");
+            collection.insertOne(doc, (result, t) -> {
+                if (t == null) {
+                    promise.complete();
+                } else {
+                    promise.fail(t.getMessage());
+                }
+            });
+            return promise.future();
+        } catch(Exception ex){
+            promise.fail(ex.getMessage());
+            return promise.future();
+        }
     }
     public Future<Void> postExpense(List<Document> doc,String userId){
         Promise<Void> promise= Promise.promise();
-        ObjectId objectId= new ObjectId(userId);
-        collection=database.getCollection("users");
-        Document filter = new Document("_id", objectId);
-        Document update = new Document("$push", new Document("Expenses", new Document("$each", doc)));
-        collection.updateOne(filter, update, (result, t) -> {
-            if(t!=null){
-                promise.fail(t.getMessage());
-            }
-            else{
-                promise.complete();
-            }
-        });
-        return promise.future();
+        try {
+            ObjectId objectId = new ObjectId(userId);
+            collection = database.getCollection("users");
+            Document filter = new Document("_id", objectId);
+            Document update = new Document("$push", new Document("Expenses", new Document("$each", doc)));
+            collection.updateOne(filter, update, (result, t) -> {
+                if (t != null) {
+                    promise.fail(t.getMessage());
+                } else {
+                    promise.complete();
+                }
+            });
+            return promise.future();
+        }catch(Exception ex){
+            promise.fail(ex.getMessage());
+            return promise.future();
+        }
     }
     public Future<List<Document>> getReport(Document filter,LocalDate dateStartFormatted,LocalDate dateEndFormatted,ObjectId id){
         Promise<List<Document>> promise= Promise.promise();
-        List<Document> resultList = new ArrayList<>();
-        collection=database.getCollection("users");
-        SingleResultCallback<Void> callbackWhenFinished = (result, t) -> promise.complete(resultList);
-        Block<Document> printBlock = document -> resultList.add(document);
-        collection.aggregate(Arrays.asList(
-                Aggregates.match(Filters.eq("_id",id)),
-                Aggregates.unwind("$Expenses"),
-                Aggregates.match(Filters.gt("Expenses.submittedDate",dateStartFormatted)),
-                Aggregates.match(Filters.lt("Expenses.submittedDate",dateEndFormatted))
-        )).forEach(printBlock, callbackWhenFinished);
-        return promise.future();
+        try {
+            List<Document> resultList = new ArrayList<>();
+            collection = database.getCollection("users");
+            SingleResultCallback<Void> callbackWhenFinished = (result, t) ->{
+                try {
+                    promise.complete(resultList);
+                }
+                catch(Exception ex){
+                    promise.fail(ex.getMessage());
+                }
+            };
+            Block<Document> printBlock = document -> resultList.add(document);
+            collection.aggregate(Arrays.asList(
+                    Aggregates.match(Filters.eq("_id", id)),
+                    Aggregates.unwind("$Expenses"),
+                    Aggregates.match(Filters.gt("Expenses.submittedDate", dateStartFormatted)),
+                    Aggregates.match(Filters.lt("Expenses.submittedDate", dateEndFormatted))
+            )).forEach(printBlock, callbackWhenFinished);
+            return promise.future();
+        }
+        catch(Exception ex){
+            promise.fail(ex.getMessage());
+            return promise.future();
+        }
     }
 
 }
